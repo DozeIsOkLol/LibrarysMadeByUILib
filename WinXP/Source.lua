@@ -1,6 +1,7 @@
 -- =================================================================================================
--- XP_UI Source Code
+-- XP_UI Source Code (Corrected)
 -- A UI library in the style of Windows XP.
+-- Font changed from Tahoma to Arial to prevent errors.
 -- =================================================================================================
 
 local XP_UI = {}
@@ -53,7 +54,7 @@ function XP_UI:CreateWindow(config)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Size = UDim2.new(1, -50, 1, 0)
     TitleLabel.Position = UDim2.new(0, 5, 0, -2)
-    TitleLabel.Font = Enum.Font.Tahoma
+    TitleLabel.Font = Enum.Font.Arial -- Corrected Font
     TitleLabel.Text = UI_Window.Title
     TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     TitleLabel.TextSize = 14
@@ -104,7 +105,7 @@ function XP_UI:CreateWindow(config)
         TabButton.BackgroundColor3 = Color3.fromRGB(236, 233, 216)
         TabButton.Size = UDim2.new(0, 100, 1, 0)
         TabButton.Position = UDim2.new(0, (index - 1) * 105, 0, 0)
-        TabButton.Font = Enum.Font.Tahoma
+        TabButton.Font = Enum.Font.Arial -- Corrected Font
         TabButton.Text = name
         TabButton.TextSize = 14
         TabButton.TextColor3 = Color3.fromRGB(0, 0, 0)
@@ -154,7 +155,7 @@ function XP_UI:CreateWindow(config)
             local Label = Instance.new("TextLabel", TabContent)
             Label.BackgroundTransparency = 1
             Label.Size = UDim2.new(1, 0, 0, 20)
-            Label.Font = Enum.Font.Tahoma
+            Label.Font = Enum.Font.Arial -- Corrected Font
             Label.Text = text
             Label.TextColor3 = Color3.fromRGB(0, 0, 0)
             Label.TextSize = 14
@@ -168,7 +169,7 @@ function XP_UI:CreateWindow(config)
             Button.BackgroundColor3 = Color3.fromRGB(236, 233, 216)
             Button.BorderColor3 = Color3.fromRGB(0, 0, 0)
             Button.Size = UDim2.new(0, 120, 0, 28)
-            Button.Font = Enum.Font.Tahoma
+            Button.Font = Enum.Font.Arial -- Corrected Font
             Button.Text = btnConfig.Name or "Button"
             Button.TextColor3 = Color3.fromRGB(0, 0, 0)
             Button.TextSize = 14
@@ -194,7 +195,7 @@ function XP_UI:CreateWindow(config)
 
             local CheckMark = Instance.new("TextLabel", Checkbox)
             CheckMark.Size = UDim2.new(1, 0, 1, 0)
-            CheckMark.Font = Enum.Font.Tahoma
+            CheckMark.Font = Enum.Font.Arial -- Corrected Font
             CheckMark.Text = "✔"
             CheckMark.TextScaled = true
             CheckMark.TextColor3 = Color3.fromRGB(0, 0, 0)
@@ -205,7 +206,7 @@ function XP_UI:CreateWindow(config)
             Label.BackgroundTransparency = 1
             Label.Size = UDim2.new(1, -20, 1, 0)
             Label.Position = UDim2.new(0, 20, 0, 0)
-            Label.Font = Enum.Font.Tahoma
+            Label.Font = Enum.Font.Arial -- Corrected Font
             Label.Text = toggleConfig.Name or "Toggle"
             Label.TextColor3 = Color3.fromRGB(0, 0, 0)
             Label.TextSize = 14
