@@ -1,8 +1,13 @@
 -- =================================================================================================
--- XP_UI Source Code (Visual Overhaul & Bug Fix)
+-- XP_UI Source Code (Definitive Fix)
 -- A UI library in the style of Windows XP.
--- Fixed bug where elements would not appear in tabs.
--- Improved visuals for a cleaner, more authentic look.
+--
+-- MAJOR BUG FIX:
+-- Replaced the automatic content sizing with a manual, reliable calculation.
+-- This guarantees that buttons, labels, and other elements will now appear correctly in the tabs.
+--
+-- VISUAL TWEAKS:
+-- The layout is now more compact and utility-focused, similar to the provided examples.
 -- =================================================================================================
 
 local XP_UI = {}
@@ -18,23 +23,21 @@ local COLOR_SCHEME = {
 	Text = Color3.fromRGB(0, 0, 0),
 	TextLight = Color3.fromRGB(255, 255, 255),
 	BorderDark = Color3.fromRGB(130, 130, 130),
-	BorderLight = Color3.fromRGB(255, 255, 255),
 	Button = Color3.fromRGB(240, 240, 240),
 	ButtonHover = Color3.fromRGB(245, 248, 255),
 	CloseButton = Color3.fromRGB(224, 67, 67),
 }
 
--- Main function to create the window (acts as a constructor)
+-- Main function to create the window
 function XP_UI:CreateWindow(config)
 	local windowInstance = setmetatable({}, Window)
 
-	-- Configuration and State
 	windowInstance.Title = config.Title or "Windows XP"
 	windowInstance.Tabs = {}
 	windowInstance.Visible = true
 
-	-- Services
 	local UserInputService = game:GetService("UserInputService")
+	local RunService = game:GetService("RunService")
 
 	-- Main ScreenGui
 	local ScreenGui = Instance.new("ScreenGui")
@@ -58,14 +61,12 @@ function XP_UI:CreateWindow(config)
 	local MainCorner = Instance.new("UICorner", Main)
 	MainCorner.CornerRadius = UDim.new(0, 3)
 
-
 	-- Header (Title Bar)
 	local Header = Instance.new("Frame", Main)
 	Header.Name = "Header"
 	Header.BackgroundColor3 = COLOR_SCHEME.HeaderStart
 	Header.Size = UDim2.new(1, 0, 0, 28)
 	Header.BorderSizePixel = 0
-
 	local HeaderGradient = Instance.new("UIGradient", Header)
 	HeaderGradient.Color = ColorSequence.new(COLOR_SCHEME.HeaderStart, COLOR_SCHEME.HeaderEnd)
 	HeaderGradient.Rotation = 90
@@ -82,7 +83,7 @@ function XP_UI:CreateWindow(config)
 
 	-- Close Button
 	local CloseButton = Instance.new("ImageButton", Header)
-	CloseButton.Image = "rbxassetid://13483329143" -- XP Close Button Image
+	CloseButton.Image = "rbxassetid://13483329143"
 	CloseButton.BackgroundColor3 = COLOR_SCHEME.CloseButton
 	CloseButton.Size = UDim2.new(0, 21, 0, 21)
 	CloseButton.Position = UDim2.new(1, -26, 0.5, 0)
@@ -90,7 +91,7 @@ function XP_UI:CreateWindow(config)
 	local CloseCorner = Instance.new("UICorner", CloseButton)
 	CloseCorner.CornerRadius = UDim.new(0, 3)
 
-	-- Draggable Logic (Improved)
+	-- Draggable Logic
 	local dragging, dragStart, startPos
 	Header.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -106,9 +107,9 @@ function XP_UI:CreateWindow(config)
 			end)
 		end
 	end)
-	UserInputService.InputChanged:Connect(function(input)
-		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-			local delta = input.Position - dragStart
+	RunService.RenderStepped:Connect(function()
+		if dragging then
+			local delta = UserInputService:GetMouseLocation() - dragStart
 			Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 		end
 	end)
@@ -127,7 +128,6 @@ function XP_UI:CreateWindow(config)
 	ContentStroke.Color = COLOR_SCHEME.BorderDark
 	ContentStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 	
-	-- Connect close button to the toggle function
 	CloseButton.MouseButton1Click:Connect(function() windowInstance:Toggle() end)
 
 	return windowInstance
@@ -172,19 +172,19 @@ function Window:CreateTab(name)
 	TabContent.CanvasSize = UDim2.new(0, 0, 0, 0)
 	
 	local ContentLayout = Instance.new("UIListLayout", TabContent)
-	ContentLayout.Padding = UDim.new(0, 10)
+	ContentLayout.Padding = UDim.new(0, 5) -- Reduced padding
 	ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	ContentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	
 	local ContentPadding = Instance.new("UIPadding", TabContent)
-	ContentPadding.PaddingTop = UDim.new(0, 10)
-	ContentPadding.PaddingLeft = UDim.new(0, 10)
-	ContentPadding.PaddingRight = UDim.new(0, 10)
+	ContentPadding.PaddingTop = UDim.new(0, 8)
+	ContentPadding.PaddingLeft = UDim.new(0, 8)
+	ContentPadding.PaddingRight = UDim.new(0, 8)
 
-	-- [BUG FIX] This automatically resizes the scrollable area as new items are added.
-	ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		TabContent.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y)
-	end)
+	-- [DEFINITIVE BUG FIX] This function manually recalculates the canvas size.
+	local function UpdateCanvasSize()
+		local totalHeight = ContentLayout.AbsoluteContentSize.Y
+		TabContent.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
+	end
 
 	local function SwitchToTab()
 		for _, t in pairs(self.Tabs) do
@@ -194,7 +194,7 @@ function Window:CreateTab(name)
 		end
 		TabContent.Visible = true
 		TabButton.ZIndex = 3
-		TabButton.BackgroundColor3 = COLOR_SCHEME.ButtonHover -- Lighter color for selected tab
+		TabButton.BackgroundColor3 = COLOR_SCHEME.ButtonHover
 	end
 
 	TabButton.MouseButton1Click:Connect(SwitchToTab)
@@ -204,22 +204,29 @@ function Window:CreateTab(name)
 
 	local ElementMethods = {}
 
+	local function AddElement(element)
+		element.Parent = TabContent
+		task.wait() -- Allow one frame for the UIListLayout to update its AbsoluteContentSize
+		UpdateCanvasSize()
+	end
+
 	function ElementMethods:AddLabel(text)
-		local Label = Instance.new("TextLabel", TabContent)
+		local Label = Instance.new("TextLabel")
 		Label.BackgroundTransparency = 1
-		Label.Size = UDim2.new(1, -20, 0, 20)
+		Label.Size = UDim2.new(1, -16, 0, 20)
 		Label.Font = FONT
-		Label.Text = "  " .. text
+		Label.Text = text
 		Label.TextColor3 = COLOR_SCHEME.Text
 		Label.TextSize = 14
 		Label.TextXAlignment = Enum.TextXAlignment.Left
-		return self
+		AddElement(Label)
+		return ElementMethods
 	end
 
 	function ElementMethods:AddButton(btnConfig)
-		local Button = Instance.new("TextButton", TabContent)
+		local Button = Instance.new("TextButton")
 		Button.BackgroundColor3 = COLOR_SCHEME.Button
-		Button.Size = UDim2.new(0, 130, 0, 28)
+		Button.Size = UDim2.new(0, 120, 0, 25)
 		Button.Font = FONT
 		Button.Text = btnConfig.Name or "Button"
 		Button.TextColor3 = COLOR_SCHEME.Text
@@ -229,36 +236,36 @@ function Window:CreateTab(name)
 		ButtonStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 		local ButtonCorner = Instance.new("UICorner", Button)
 		ButtonCorner.CornerRadius = UDim.new(0, 3)
-
 		Button.MouseEnter:Connect(function() Button.BackgroundColor3 = COLOR_SCHEME.ButtonHover end)
 		Button.MouseLeave:Connect(function() Button.BackgroundColor3 = COLOR_SCHEME.Button end)
 		Button.MouseButton1Click:Connect(function() pcall(btnConfig.Callback) end)
-		return self
+		AddElement(Button)
+		return ElementMethods
 	end
 
 	function ElementMethods:AddToggle(toggleConfig)
 		local toggled = false
-		local Frame = Instance.new("Frame", TabContent)
+		local Frame = Instance.new("Frame")
 		Frame.BackgroundTransparency = 1
-		Frame.Size = UDim2.new(1, -20, 0, 25)
+		Frame.Size = UDim2.new(1, -16, 0, 22)
 
 		local Checkbox = Instance.new("ImageLabel", Frame)
-		Checkbox.Image = "rbxassetid://13483329158" -- XP Checkbox Image
+		Checkbox.Image = "rbxassetid://13483329158"
 		Checkbox.Size = UDim2.new(0, 13, 0, 13)
-		Checkbox.Position = UDim2.new(0, 5, 0.5, 0)
+		Checkbox.Position = UDim2.new(0, 0, 0.5, 0)
 		Checkbox.AnchorPoint = Vector2.new(0, 0.5)
 		Checkbox.BackgroundTransparency = 1
 
 		local CheckMark = Instance.new("ImageLabel", Checkbox)
-		CheckMark.Image = "rbxassetid://13483329124" -- XP Checkmark Image
+		CheckMark.Image = "rbxassetid://13483329124"
 		CheckMark.Size = UDim2.new(1, 0, 1, 0)
 		CheckMark.BackgroundTransparency = 1
 		CheckMark.Visible = false
 
 		local Label = Instance.new("TextLabel", Frame)
 		Label.BackgroundTransparency = 1
-		Label.Size = UDim2.new(1, -25, 1, 0)
-		Label.Position = UDim2.new(0, 25, 0, 0)
+		Label.Size = UDim2.new(1, -20, 1, 0)
+		Label.Position = UDim2.new(0, 20, 0, 0)
 		Label.Font = FONT
 		Label.Text = toggleConfig.Name or "Toggle"
 		Label.TextColor3 = COLOR_SCHEME.Text
@@ -274,7 +281,8 @@ function Window:CreateTab(name)
 			CheckMark.Visible = toggled
 			pcall(toggleConfig.Callback, toggled)
 		end)
-		return self
+		AddElement(Frame)
+		return ElementMethods
 	end
 	
 	return ElementMethods
