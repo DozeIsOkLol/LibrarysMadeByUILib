@@ -1,11 +1,9 @@
 -- =================================================================================================
--- XP_UI Source Code (Version 2.3 - Final Bug Fixes)
+-- XP_UI Source Code (Version 2.4 - Dragging Logic Overhaul)
 --
--- RELIABILITY OVERHAUL:
--- - Fixed "attempt to index nil with 'FindFirstChild'" by storing direct object references.
--- - Fixed control button icons (X, _, □) not appearing due to a ZIndex conflict.
--- - Implemented a guaranteed, manual canvas sizing method that works even when tabs are hidden.
---   This definitively fixes the issue of UI elements not appearing in their tabs.
+-- FINAL BUG FIX:
+-- - Rewrote the UI dragging logic to be smooth, stable, and correct.
+-- - The "jump to corner" bug has been eliminated by correctly calculating the mouse's delta.
 -- =================================================================================================
 
 local XP_UI = {}
@@ -101,7 +99,7 @@ function XP_UI:CreateWindow(config)
 		Button.TextSize = 14
 		Button.TextColor3 = COLOR_SCHEME.TextLight
 		Button.AutoButtonColor = false
-		Button.ZIndex = 3 -- [FIX] Set ZIndex higher than header gradient
+		Button.ZIndex = 3
 		local corner = Instance.new("UICorner", Button)
 		corner.CornerRadius = UDim.new(0, 3)
 		return Button
@@ -119,7 +117,7 @@ function XP_UI:CreateWindow(config)
 
 	-- Menu Bar
 	local MenuBar = Instance.new("Frame", InnerFrame)
-	windowInstance.MenuBar = MenuBar -- [FIX] Store direct reference
+	windowInstance.MenuBar = MenuBar
 	MenuBar.Name = "MenuBar"
 	MenuBar.BackgroundColor3 = COLOR_SCHEME.BorderHighlight
 	MenuBar.Position = UDim2.new(0, 0, 0, 28)
@@ -133,7 +131,7 @@ function XP_UI:CreateWindow(config)
 	
 	-- Content Area
 	local ContentContainer = Instance.new("Frame", InnerFrame)
-	windowInstance.ContentContainer = ContentContainer -- [FIX] Store direct reference
+	windowInstance.ContentContainer = ContentContainer
 	ContentContainer.Name = "ContentContainer"
 	ContentContainer.BackgroundColor3 = COLOR_SCHEME.ContentBack
 	ContentContainer.Position = UDim2.new(0, 4, 0, 56)
@@ -143,20 +141,33 @@ function XP_UI:CreateWindow(config)
 	ContentStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
 	---------------------- FUNCTIONALITY ----------------------
-	-- Draggable Logic
+	-- [DRAG FIX] Rewritten for smooth, stable dragging.
 	local dragging, dragStart, startPos
 	Header.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 and not windowInstance.IsMaximized then
-			dragging = true; dragStart = input.Position; startPos = Main.Position
-			local conn; conn = UserInputService.InputEnded:Connect(function(endInput)
-				if endInput.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false; conn:Disconnect() end
+			dragging = true
+			dragStart = UserInputService:GetMouseLocation()
+			startPos = Main.Position
+
+			local conn
+			conn = UserInputService.InputEnded:Connect(function(endInput)
+				if endInput.UserInputType == Enum.UserInputType.MouseButton1 then
+					dragging = false
+					conn:Disconnect()
+				end
 			end)
 		end
 	end)
 	RunService.RenderStepped:Connect(function()
 		if dragging and not windowInstance.IsMaximized then
 			local mousePos = UserInputService:GetMouseLocation()
-			Main.Position = UDim2.fromOffset(startPos.X.Offset + (mousePos.X - dragStart.X), startPos.Y.Offset + (mousePos.Y - dragStart.Y))
+			local delta = mousePos - dragStart
+			Main.Position = UDim2.new(
+				startPos.X.Scale,
+				startPos.X.Offset + delta.X,
+				startPos.Y.Scale,
+				startPos.Y.Offset + delta.Y
+			)
 		end
 	end)
 	
@@ -200,7 +211,7 @@ function Window:CreateMenuTab(name)
 	local self = self
 	local MenuTab = { Name = name }
 
-	local TabButton = Instance.new("TextButton", self.MenuBar) -- Use direct reference
+	local TabButton = Instance.new("TextButton", self.MenuBar)
 	TabButton.Name = name; TabButton.BackgroundTransparency = 1; TabButton.Size = UDim2.new(0, 50, 1, -4)
 	TabButton.Position = UDim2.new(0, 0, 0.5, 0); TabButton.AnchorPoint = Vector2.new(0, 0.5)
 	TabButton.Font = FONT; TabButton.Text = name; TabButton.TextSize = 14; TabButton.TextColor3 = COLOR_SCHEME.Text
@@ -208,7 +219,7 @@ function Window:CreateMenuTab(name)
 	TabButton.MouseEnter:Connect(function() TabButton.BackgroundColor3 = COLOR_SCHEME.ButtonHover end)
 	TabButton.MouseLeave:Connect(function() TabButton.BackgroundTransparency = 1 end)
 
-	local TabContent = Instance.new("ScrollingFrame", self.ContentContainer) -- Use direct reference
+	local TabContent = Instance.new("ScrollingFrame", self.ContentContainer)
 	MenuTab.ContentFrame = TabContent
 	TabContent.BackgroundTransparency = 1; TabContent.Size = UDim2.new(1, 0, 1, 0); TabContent.BorderSizePixel = 0
 	TabContent.Visible = false; TabContent.ScrollBarImageColor3 = COLOR_SCHEME.BorderDark; TabContent.ScrollBarThickness = 10
@@ -222,7 +233,6 @@ function Window:CreateMenuTab(name)
 	ContentPadding.PaddingTop = UDim.new(0, 8)
 	ContentPadding.PaddingLeft = UDim.new(0, 8)
 	
-	-- [DEFINITIVE BUG FIX] Manually calculate canvas size, independent of visibility.
 	MenuTab.currentContentY = ContentPadding.PaddingTop.Offset
 	local function UpdateCanvasSize(element)
 		MenuTab.currentContentY = MenuTab.currentContentY + element.Size.Y.Offset + ContentLayout.Padding.Offset
